@@ -68,3 +68,8 @@ func (r *RedisStore) PutStruct(ctx context.Context, key string, data any, ttl ti
 	out := r.client.SetEx(ctx, key, string(b), ttl)
 	return out.Err()
 }
+
+func (r *RedisStore) Forget(ctx context.Context, key string) error {
+	out := r.client.Del(ctx, key)
+	return out.Err()
+}

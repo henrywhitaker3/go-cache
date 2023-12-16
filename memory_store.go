@@ -68,3 +68,20 @@ func (m *MemoryStore) PutStruct(ctx context.Context, key string, data any, ttl t
 	m.structStore[key] = data
 	return nil
 }
+
+func (m *MemoryStore) Forget(ctx context.Context, key string) error {
+	m.stringMutex.Lock()
+	defer m.stringMutex.Unlock()
+	m.structMutex.Lock()
+	defer m.structMutex.Unlock()
+
+	if _, ok := m.stringStore[key]; ok {
+		delete(m.stringStore, key)
+		return nil
+	}
+	if _, ok := m.structStore[key]; ok {
+		delete(m.structStore, key)
+		return nil
+	}
+	return ErrMissingKey
+}
