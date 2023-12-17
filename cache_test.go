@@ -3,6 +3,7 @@ package gocache
 import (
 	"context"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -42,4 +43,67 @@ func TestCacheGetStructValidKey(t *testing.T) {
 	err = memC.GetStruct(context.Background(), "bongo", out)
 	assert.Nil(t, err)
 	assert.Equal(t, "bingo", out.Data)
+}
+
+func TestRememebrStringCallsFuncWhenNotInCache(t *testing.T) {
+	cache := NewCache(memC)
+
+	called := false
+
+	out, err := cache.RememberString(context.Background(), "bongo", time.Second*30, func() (string, error) {
+		called = true
+		return "apples", nil
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "apples", out)
+	assert.True(t, called)
+}
+
+func TestRememberStringDoesntCallFuncWhenExistsInCache(t *testing.T) {
+	cache := NewCache(memC)
+
+	called := false
+
+	cache.PutString(context.Background(), "bongo", "apples", time.Second*30)
+
+	out, err := cache.RememberString(context.Background(), "bongo", time.Second*30, func() (string, error) {
+		called = true
+		return "apples", nil
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "apples", out)
+	assert.False(t, called)
+}
+
+func TestRememberStructCallsFuncWhenNotInCache(t *testing.T) {
+	cache := NewCache(memC)
+
+	called := false
+
+	var out demo
+	err := cache.RememberStruct(context.Background(), "bongo", &out, time.Second*30, func() (any, error) {
+		called = true
+		return demo{Data: "oranges"}, nil
+	})
+	assert.Nil(t, err)
+	assert.Equal(t, "oranges", out.Data)
+	assert.True(t, called)
+}
+
+func TestRememberStructDoesntCallFuncWhenInCache(t *testing.T) {
+	cache := NewCache(memC)
+
+	called := false
+
+	assert.Nil(t, cache.PutStruct(context.Background(), "bongo", demo{Data: "pears"}, time.Second*30))
+
+	var out demo
+	err := cache.RememberStruct(context.Background(), "bongo", &out, time.Second*30, func() (any, error) {
+		called = true
+		return demo{Data: "pears"}, nil
+	})
+
+	assert.Nil(t, err)
+	assert.Equal(t, "pears", out.Data)
+	assert.False(t, called)
 }
