@@ -59,3 +59,17 @@ func TestMemGetStructReturnsStruct(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "bingo", out.Data)
 }
+
+func TestMemForgetKey(t *testing.T) {
+	store := NewMemoryStore()
+	store.PutString(context.Background(), "bongo", "bingo", time.Second*30)
+
+	g, err := store.GetString(context.Background(), "bongo")
+	assert.Nil(t, err)
+	assert.Equal(t, "bingo", g)
+
+	store.Forget(context.Background(), "bongo")
+
+	_, err = store.GetString(context.Background(), "bongo")
+	assert.ErrorIs(t, err, ErrMissingKey)
+}

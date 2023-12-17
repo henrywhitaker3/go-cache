@@ -75,3 +75,23 @@ func TestRedisGetStructReturnsStruct(t *testing.T) {
 
 	assert.Equal(t, "bingo", out.Data)
 }
+
+func TestRedisPutStruct(t *testing.T) {
+	c, mock := redismock.NewClientMock()
+	store := NewRedisStore(c)
+
+	item := &demo{Data: "bingo"}
+
+	mock.ExpectSetEx("bongo", item, time.Second*30).SetVal("OK")
+
+	store.PutStruct(context.Background(), "bongo", item, time.Second*30)
+}
+
+func TestRedisForgetKey(t *testing.T) {
+	c, mock := redismock.NewClientMock()
+	store := NewRedisStore(c)
+
+	mock.ExpectDel("bongo")
+
+	store.Forget(context.Background(), "bongo")
+}
