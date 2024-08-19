@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type demo struct {
@@ -17,8 +17,8 @@ func TestMemGetStringMissingKey(t *testing.T) {
 
 	out, err := store.GetString(context.Background(), "bongo")
 
-	assert.Equal(t, "", out)
-	assert.Equal(t, ErrMissingKey, err)
+	require.Equal(t, "", out)
+	require.Equal(t, ErrMissingKey, err)
 }
 
 func TestMemGetStringHit(t *testing.T) {
@@ -27,8 +27,8 @@ func TestMemGetStringHit(t *testing.T) {
 
 	out, err := store.GetString(context.Background(), "bongo")
 
-	assert.Nil(t, err)
-	assert.Equal(t, "bingo", out)
+	require.Nil(t, err)
+	require.Equal(t, "bingo", out)
 }
 
 func TestMemPutString(t *testing.T) {
@@ -36,7 +36,7 @@ func TestMemPutString(t *testing.T) {
 
 	err := store.PutString(context.Background(), "bongo", "bongo", time.Second*30)
 
-	assert.Nil(t, err)
+	require.Nil(t, err)
 }
 
 func TestMemGetStructReturnsMissingKeyWhenNotInCache(t *testing.T) {
@@ -45,7 +45,7 @@ func TestMemGetStructReturnsMissingKeyWhenNotInCache(t *testing.T) {
 	out := &demo{}
 
 	err := store.GetStruct(context.Background(), "bongo", out)
-	assert.ErrorIs(t, err, ErrMissingKey)
+	require.ErrorIs(t, err, ErrMissingKey)
 }
 
 func TestMemGetStructReturnsStruct(t *testing.T) {
@@ -56,8 +56,8 @@ func TestMemGetStructReturnsStruct(t *testing.T) {
 	out := &demo{}
 
 	err := store.GetStruct(context.Background(), "bongo", out)
-	assert.Nil(t, err)
-	assert.Equal(t, "bingo", out.Data)
+	require.Nil(t, err)
+	require.Equal(t, "bingo", out.Data)
 }
 
 func TestMemForgetKey(t *testing.T) {
@@ -65,11 +65,11 @@ func TestMemForgetKey(t *testing.T) {
 	store.PutString(context.Background(), "bongo", "bingo", time.Second*30)
 
 	g, err := store.GetString(context.Background(), "bongo")
-	assert.Nil(t, err)
-	assert.Equal(t, "bingo", g)
+	require.Nil(t, err)
+	require.Equal(t, "bingo", g)
 
 	store.Forget(context.Background(), "bongo")
 
 	_, err = store.GetString(context.Background(), "bongo")
-	assert.ErrorIs(t, err, ErrMissingKey)
+	require.ErrorIs(t, err, ErrMissingKey)
 }

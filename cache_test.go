@@ -5,48 +5,62 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-)
-
-var (
-	memC *Cache = NewCache(NewMemoryStore())
+	"github.com/stretchr/testify/require"
 )
 
 func TestCacheGetStringMissingKey(t *testing.T) {
-	_, err := memC.GetString(context.Background(), "bongo")
-	assert.ErrorIs(t, err, ErrMissingKey)
+	c, cancel := newRueidis(t)
+	defer cancel()
+	cache := NewCache(NewRueidisStore(c))
+
+	_, err := cache.GetString(context.Background(), "bongo")
+	require.ErrorIs(t, err, ErrMissingKey)
 }
 
 func TestCacheGetValidKey(t *testing.T) {
-	err := memC.PutString(context.Background(), "bongo", "bingo", 0)
-	assert.Nil(t, err)
+	c, cancel := newRueidis(t)
+	defer cancel()
+	cache := NewCache(NewRueidisStore(c))
 
-	val, err := memC.GetString(context.Background(), "bongo")
-	assert.Nil(t, err)
-	assert.Equal(t, "bingo", val)
+	err := cache.PutString(context.Background(), "bongo", "bingo", time.Minute)
+	require.Nil(t, err)
 
-	memC.Forget(context.Background(), "bongo")
+	val, err := cache.GetString(context.Background(), "bongo")
+	require.Nil(t, err)
+	require.Equal(t, "bingo", val)
+
+	cache.Forget(context.Background(), "bongo")
 }
 
 func TestCacheGetStructMissingKey(t *testing.T) {
+	c, cancel := newRueidis(t)
+	defer cancel()
+	cache := NewCache(NewRueidisStore(c))
+
 	out := &demo{}
-	err := memC.GetStruct(context.Background(), "bongo", out)
-	assert.ErrorIs(t, err, ErrMissingKey)
+	err := cache.GetStruct(context.Background(), "bongo", out)
+	require.ErrorIs(t, err, ErrMissingKey)
 }
 
 func TestCacheGetStructValidKey(t *testing.T) {
+	c, cancel := newRueidis(t)
+	defer cancel()
+	cache := NewCache(NewRueidisStore(c))
+
 	item := demo{Data: "bingo"}
-	err := memC.PutStruct(context.Background(), "bongo", item, 0)
-	assert.Nil(t, err)
+	err := cache.PutStruct(context.Background(), "bongo", item, time.Minute)
+	require.Nil(t, err)
 
 	out := &demo{}
-	err = memC.GetStruct(context.Background(), "bongo", out)
-	assert.Nil(t, err)
-	assert.Equal(t, "bingo", out.Data)
+	err = cache.GetStruct(context.Background(), "bongo", out)
+	require.Nil(t, err)
+	require.Equal(t, "bingo", out.Data)
 }
 
 func TestRememebrStringCallsFuncWhenNotInCache(t *testing.T) {
-	cache := NewCache(memC)
+	c, cancel := newRueidis(t)
+	defer cancel()
+	cache := NewCache(NewRueidisStore(c))
 
 	called := false
 
@@ -54,13 +68,15 @@ func TestRememebrStringCallsFuncWhenNotInCache(t *testing.T) {
 		called = true
 		return "apples", nil
 	})
-	assert.Nil(t, err)
-	assert.Equal(t, "apples", out)
-	assert.True(t, called)
+	require.Nil(t, err)
+	require.Equal(t, "apples", out)
+	require.True(t, called)
 }
 
 func TestRememberStringDoesntCallFuncWhenExistsInCache(t *testing.T) {
-	cache := NewCache(memC)
+	c, cancel := newRueidis(t)
+	defer cancel()
+	cache := NewCache(NewRueidisStore(c))
 
 	called := false
 
@@ -70,13 +86,15 @@ func TestRememberStringDoesntCallFuncWhenExistsInCache(t *testing.T) {
 		called = true
 		return "apples", nil
 	})
-	assert.Nil(t, err)
-	assert.Equal(t, "apples", out)
-	assert.False(t, called)
+	require.Nil(t, err)
+	require.Equal(t, "apples", out)
+	require.False(t, called)
 }
 
 func TestRememberStructCallsFuncWhenNotInCache(t *testing.T) {
-	cache := NewCache(memC)
+	c, cancel := newRueidis(t)
+	defer cancel()
+	cache := NewCache(NewRueidisStore(c))
 
 	called := false
 
@@ -85,17 +103,19 @@ func TestRememberStructCallsFuncWhenNotInCache(t *testing.T) {
 		called = true
 		return demo{Data: "oranges"}, nil
 	})
-	assert.Nil(t, err)
-	assert.Equal(t, "oranges", out.Data)
-	assert.True(t, called)
+	require.Nil(t, err)
+	require.Equal(t, "oranges", out.Data)
+	require.True(t, called)
 }
 
 func TestRememberStructDoesntCallFuncWhenInCache(t *testing.T) {
-	cache := NewCache(memC)
+	c, cancel := newRueidis(t)
+	defer cancel()
+	cache := NewCache(NewRueidisStore(c))
 
 	called := false
 
-	assert.Nil(t, cache.PutStruct(context.Background(), "bongo", demo{Data: "pears"}, time.Second*30))
+	require.Nil(t, cache.PutStruct(context.Background(), "bongo", demo{Data: "pears"}, time.Second*30))
 
 	var out demo
 	err := cache.RememberStruct(context.Background(), "bongo", &out, time.Second*30, func() (any, error) {
@@ -103,7 +123,7 @@ func TestRememberStructDoesntCallFuncWhenInCache(t *testing.T) {
 		return demo{Data: "pears"}, nil
 	})
 
-	assert.Nil(t, err)
-	assert.Equal(t, "pears", out.Data)
-	assert.False(t, called)
+	require.Nil(t, err)
+	require.Equal(t, "pears", out.Data)
+	require.False(t, called)
 }
