@@ -5,7 +5,7 @@ go 1.22.2
 require (
 	github.com/docker/go-connections v0.5.0
 	github.com/go-redis/redismock/v9 v9.2.0
-	github.com/redis/go-redis/v9 v9.3.0
+	github.com/redis/go-redis/v9 v9.6.1
 	github.com/redis/rueidis v1.0.44
 	github.com/stretchr/testify v1.9.0
 	github.com/testcontainers/testcontainers-go/modules/redis v0.32.0
