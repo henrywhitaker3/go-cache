@@ -3,7 +3,7 @@ module github.com/henrywhitaker3/go-cache
 go 1.22.2
 
 require (
-	github.com/docker/go-connections v0.5.0
+	github.com/docker/go-connections v0.6.0
 	github.com/go-redis/redismock/v9 v9.2.0
 	github.com/redis/go-redis/v9 v9.3.0
 	github.com/redis/rueidis v1.0.44
