@@ -8,7 +8,7 @@ require (
 	github.com/redis/go-redis/v9 v9.12.1
 	github.com/redis/rueidis v1.0.44
 	github.com/stretchr/testify v1.11.1
-	github.com/testcontainers/testcontainers-go/modules/redis v0.32.0
+	github.com/testcontainers/testcontainers-go/modules/redis v0.38.0
 )
 
 require (
